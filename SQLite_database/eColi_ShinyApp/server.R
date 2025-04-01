@@ -8,7 +8,7 @@ source("modules/server/analysis_server.R")
 
 server <- function(input, output, session) {
   # Connect to your SQLite database
-  con <- dbConnect(RSQLite::SQLite(), "/Users/juanjovel/OneDrive/jj/UofC/git_repos/EcoliGenomics/SQLite_database/scripts/Ecoli.db")
+  con <- dbConnect(RSQLite::SQLite(), "/Users/juanjovel/OneDrive/jj/UofC/git_repos/CheckleyS_ButterA_EcoliGen/SQLite_database/scripts/Ecoli.db")
   
   # Close the connection when the session ends
   onSessionEnded(function() {
