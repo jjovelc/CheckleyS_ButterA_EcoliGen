@@ -34,8 +34,7 @@ Shiny.addCustomMessageHandler("updateGenomeMap", function (data) {
     const container = document.getElementById("genome-map");
     const containerWidth = container.offsetWidth || 800;
     const containerHeight = container.offsetHeight || 800;
-    //const radius = Math.min(containerWidth, containerHeight) / 2 - 40;
-    const radius = Math.min(containerWidth, containerHeight) / 2.5;
+    const radius = Math.min(containerWidth, containerHeight) / 2 - 40;
 
     // Create zoom behavior
     const zoom = d3.zoom().on("zoom", (event) => {
@@ -49,7 +48,7 @@ Shiny.addCustomMessageHandler("updateGenomeMap", function (data) {
       .attr("id", "genome-svg")
       .attr("width", containerWidth)
       .attr("height", containerHeight)
-      .attr("viewBox", `-${containerWidth/2} -${containerHeight/2} ${containerWidth} ${containerHeight}`)
+      .attr("font-family", "Arial, Helvetica, sans-serif")
       .call(zoom);
 
     // Create a group for all elements that should zoom together
@@ -77,6 +76,7 @@ Shiny.addCustomMessageHandler("updateGenomeMap", function (data) {
       .attr("text-anchor", "middle")
       .attr("font-size", "20px")
       .attr("font-weight", "bold")
+      .attr("font-family", "Arial, Helvetica, sans-serif")
       .attr("fill", "black")
       .text(filename);
 
@@ -132,6 +132,7 @@ Shiny.addCustomMessageHandler("updateGenomeMap", function (data) {
             .attr("text-anchor", "middle")
             .attr("font-size", "12px")
             .attr("font-weight", "bold")
+            .attr("font-family", "Arial, Helvetica, sans-serif")
             .attr("fill", "black")
             .text(geneName);
           
@@ -147,6 +148,7 @@ Shiny.addCustomMessageHandler("updateGenomeMap", function (data) {
               .attr("y", tooltipY + 15)
               .attr("text-anchor", "middle")
               .attr("font-size", "10px")
+              .attr("font-family", "Arial, Helvetica, sans-serif")
               .attr("fill", "#333")
               .text(displayProduct);
           }
@@ -175,6 +177,7 @@ Shiny.addCustomMessageHandler("updateGenomeMap", function (data) {
       .attr("x", 30)
       .attr("y", 15)
       .attr("font-size", "12px")
+      .attr("font-family", "Arial, Helvetica, sans-serif")
       .attr("fill", "black")
       .text("Plus strand (+)");
 
@@ -198,6 +201,7 @@ Shiny.addCustomMessageHandler("updateGenomeMap", function (data) {
       .attr("x", 30)
       .attr("y", 85)
       .attr("font-size", "12px")
+      .attr("font-family", "Arial, Helvetica, sans-serif")
       .attr("fill", "black")
       .text("Minus strand (-)");
 
