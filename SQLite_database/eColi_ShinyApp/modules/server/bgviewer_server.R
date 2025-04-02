@@ -1,63 +1,82 @@
-# modules/bgviewer.R
-
-
 bgviewer_server <- function(input, output, session) {
   observeEvent(input$generate_map, {
     print("Generate Map button clicked.")  # Debug
     
-    # Ensure files are uploaded
     req(input$genome_file, input$gff_file)
     
-    # File paths
     genome_file <- input$genome_file$datapath
     gff_file    <- input$gff_file$datapath
     
-    # Read genome from the FASTA file
     genome <- readDNAStringSet(genome_file)
-    
-    # Get total genome length
     genome_length <- sum(width(genome))
-    
-    # Extract the basename of the genome file
-    print(paste0("Name of genome file: ", input$genome_file$name))
     genome_basename <- tools::file_path_sans_ext(basename(input$genome_file$name))
     
-    print(paste("Uploaded genome file:", genome_file))
-    print(paste("Uploaded GFF file:", gff_file))
-    print(paste("Genome basename:", genome_basename))
-    
-    # Parse the GFF file
-    gff_data <- import(gff_file)  # GRanges object
-    
-    # Filter for CDS features
+    gff_data <- import(gff_file)
     cds_data <- gff_data[gff_data$type == "CDS"]
     
-    # Extract relevant information
+    # Convert GRanges to data frame
+    genes_df <- as.data.frame(cds_data)
+    
+    # Create the genes data frame
     genes <- data.frame(
-      contig = as.character(seqnames(cds_data)),
-      start = start(cds_data),
-      end = end(cds_data),
-      strand = as.character(strand(cds_data)),
-      attributes = mcols(cds_data)$ID,  # Use "ID" or other relevant metadata column
-      product = mcols(cds_data)$product # Use "product" if available
+      contig = as.character(genes_df$seqnames),
+      start = genes_df$start,
+      end = genes_df$end,
+      strand = as.character(genes_df$strand),
+      attributes = genes_df$ID,
+      product = genes_df$product
     )
     
-    print("Extracted gene data:")  # Debug
+    # Extract gene names from the GFF
+    # First check if gene column exists directly
+    if ("gene" %in% colnames(genes_df)) {
+      genes$name <- genes_df$gene
+    } else {
+      # Try to extract from attributes
+      extract_gene_name <- function(attr_string) {
+        if(is.null(attr_string) || is.na(attr_string)) return("Unknown")
+        
+        # Check if this is the full attribute string or just ID
+        if(grepl("gene=", attr_string)) {
+          gene_pattern <- "gene=([^;]+)"
+          gene_match <- regmatches(attr_string, regexec(gene_pattern, attr_string))
+          gene_name <- unlist(gene_match)[2]
+          
+          if(!is.na(gene_name) && length(gene_name) > 0) {
+            return(gene_name)
+          }
+        }
+        
+        # Fallback to ID or just return what we have
+        return(attr_string)
+      }
+      
+      # Try to get from a potential full attributes column
+      if("attributes" %in% colnames(genes_df)) {
+        genes$name <- sapply(genes_df$attributes, extract_gene_name)
+      } else {
+        # Just use ID as name
+        genes$name <- genes$attributes
+      }
+    }
+    
+    # Make sure name is never NULL
+    genes$name[is.na(genes$name)] <- "Unknown"
+    
+    # Print a bit of the data frame to debug
+    print("First few rows of genes data frame:")
     print(head(genes))
     
-    # Convert to JSON string
-    genes_json <- toJSON(genes, auto_unbox = TRUE)  # Ensure proper JSON string
+    # Convert to JSON once
+    genes_json <- jsonlite::toJSON(genes, auto_unbox = TRUE)
     
-    print("Sending JSON data to the frontend:")  # Debug
+    print("About to convert genes to JSON")
+    print(substr(genes_json, 1, 500))  # Print first 500 chars of the JSON string
     
-    # Prepare data to send to the frontend
-    message <- list(
+    session$sendCustomMessage("updateGenomeMap", list(
       genes = genes_json,
       genomeLength = genome_length,
       filename = genome_basename
-    )
-    
-    # Send JSON to JavaScript
-    session$sendCustomMessage("updateGenomeMap", message)
+    ))
   })
 }
